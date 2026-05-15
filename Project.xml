@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project>
+    <meta title="HaxePainter"
+          package="com.haxepainter.app"
+          version="1.0.0"
+          company="OpenAI"/>
+
+    <app main="Main"
+         file="HaxePainter"
+         path="export"/>
+
+    <window width="1280"
+            height="720"
+            fps="60"
+            background="#1E1E1E"/>
+
+    <source path="source"/>
+    <assets path="assets"/>
+
+    <haxelib name="flixel"/>
+    <haxelib name="openfl"/>
+    <haxelib name="lime"/>
+</project>
