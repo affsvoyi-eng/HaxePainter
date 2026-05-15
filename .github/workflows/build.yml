@@ -133,7 +133,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: HaxePainter-Android
-          path: export/release/android/bin/app/build/outputs/apk/debug/*.apk
+          path: export/android/bin/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
           retention-days: 7
 
@@ -230,7 +230,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: HaxePainter-Windows
-          path: export/release/windows/bin/
+          path: export/windows/bin/
           if-no-files-found: error
           retention-days: 7
 
@@ -301,6 +301,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: HaxePainter-HTML5
-          path: export/release/html5/bin/
+          path: export/html5/bin/
           if-no-files-found: error
           retention-days: 7
