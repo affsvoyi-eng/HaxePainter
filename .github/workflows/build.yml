@@ -1,0 +1,305 @@
+name: HaxePainter Build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+
+  Android:
+    runs-on: ubuntu-latest
+
+    steps:
+      # =========================================
+      # CHECKOUT
+      # =========================================
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # =========================================
+      # HAXE
+      # =========================================
+
+      - name: Setup Haxe
+        uses: krdlab/setup-haxe@v1
+        with:
+          haxe-version: 4.2.5
+
+      # =========================================
+      # JAVA
+      # =========================================
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      # =========================================
+      # ANDROID SDK
+      # =========================================
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      # =========================================
+      # HAXELIB
+      # =========================================
+
+      - name: Setup Haxelib
+        run: |
+          mkdir -p ~/haxelib
+          haxelib setup ~/haxelib
+
+      # =========================================
+      # CACHE
+      # =========================================
+
+      - name: Cache Android Build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/haxelib
+            ~/.lime
+            ~/.gradle/caches
+            export
+          key: android-${{ runner.os }}-${{ hashFiles('**/Project.xml') }}
+          restore-keys: |
+            android-${{ runner.os }}-
+
+      # =========================================
+      # INSTALL ANDROID DEPENDENCIES
+      # =========================================
+
+      - name: Install Android Dependencies
+        run: |
+          yes | sdkmanager --licenses
+          sdkmanager --update
+
+          sdkmanager \
+            "platform-tools" \
+            "platforms;android-30" \
+            "build-tools;30.0.3" \
+            "ndk;21.4.7075529"
+
+      # =========================================
+      # INSTALL LIBRARIES
+      # =========================================
+
+      - name: Install Libraries
+        run: |
+          haxelib install lime --quiet
+          haxelib install openfl --quiet
+          haxelib install flixel --quiet
+          haxelib install flixel-tools --quiet
+          haxelib install flixel-ui --quiet
+          haxelib install flixel-addons --quiet
+          haxelib install hxcpp --quiet
+
+      # =========================================
+      # LIME SETUP
+      # =========================================
+
+      - name: Run Lime Setup
+        run: |
+          haxelib run lime setup
+
+      # =========================================
+      # CONFIGURE ANDROID
+      # =========================================
+
+      - name: Configure Android
+        run: |
+          haxelib run lime config ANDROID_SDK $ANDROID_SDK_ROOT
+          haxelib run lime config ANDROID_NDK_ROOT "$ANDROID_SDK_ROOT/ndk/21.4.7075529"
+          haxelib run lime config JAVA_HOME $JAVA_HOME
+
+      # =========================================
+      # BUILD APK
+      # =========================================
+
+      - name: Build Android
+        run: |
+          haxelib run lime build android
+
+      # =========================================
+      # UPLOAD APK
+      # =========================================
+
+      - name: Upload Android Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: HaxePainter-Android
+          path: export/release/android/bin/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 7
+
+  Windows:
+    runs-on: windows-latest
+
+    steps:
+      # =========================================
+      # CHECKOUT
+      # =========================================
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # =========================================
+      # HAXE
+      # =========================================
+
+      - name: Setup Haxe
+        uses: krdlab/setup-haxe@v1
+        with:
+          haxe-version: 4.2.5
+
+      # =========================================
+      # MSVC
+      # =========================================
+
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+
+      # =========================================
+      # HAXELIB
+      # =========================================
+
+      - name: Setup Haxelib
+        shell: powershell
+        run: |
+          New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\haxelib"
+          haxelib setup "$env:USERPROFILE\haxelib"
+
+      # =========================================
+      # CACHE
+      # =========================================
+
+      - name: Cache Windows Build
+        uses: actions/cache@v4
+        with:
+          path: |
+            C:\Users\runneradmin\haxelib
+            C:\Users\runneradmin\.lime
+            export
+          key: windows-${{ runner.os }}-${{ hashFiles('**/Project.xml') }}
+          restore-keys: |
+            windows-${{ runner.os }}-
+
+      # =========================================
+      # INSTALL LIBRARIES
+      # =========================================
+
+      - name: Install Libraries
+        shell: powershell
+        run: |
+          haxelib install lime --quiet
+          haxelib install openfl --quiet
+          haxelib install flixel --quiet
+          haxelib install flixel-tools --quiet
+          haxelib install flixel-ui --quiet
+          haxelib install flixel-addons --quiet
+          haxelib install hxcpp --quiet
+
+      # =========================================
+      # LIME SETUP
+      # =========================================
+
+      - name: Run Lime Setup
+        shell: powershell
+        run: |
+          haxelib run lime setup
+
+      # =========================================
+      # BUILD WINDOWS
+      # =========================================
+
+      - name: Build Windows
+        shell: powershell
+        run: |
+          haxelib run lime build windows
+
+      # =========================================
+      # UPLOAD WINDOWS BUILD
+      # =========================================
+
+      - name: Upload Windows Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: HaxePainter-Windows
+          path: export/release/windows/bin/
+          if-no-files-found: error
+          retention-days: 7
+
+  HTML5:
+    runs-on: ubuntu-latest
+
+    steps:
+      # =========================================
+      # CHECKOUT
+      # =========================================
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # =========================================
+      # HAXE
+      # =========================================
+
+      - name: Setup Haxe
+        uses: krdlab/setup-haxe@v1
+        with:
+          haxe-version: 4.2.5
+
+      # =========================================
+      # HAXELIB
+      # =========================================
+
+      - name: Setup Haxelib
+        run: |
+          mkdir -p ~/haxelib
+          haxelib setup ~/haxelib
+
+      # =========================================
+      # INSTALL LIBRARIES
+      # =========================================
+
+      - name: Install Libraries
+        run: |
+          haxelib install lime --quiet
+          haxelib install openfl --quiet
+          haxelib install flixel --quiet
+          haxelib install flixel-tools --quiet
+          haxelib install flixel-ui --quiet
+          haxelib install flixel-addons --quiet
+          haxelib install hxcpp --quiet
+
+      # =========================================
+      # LIME SETUP
+      # =========================================
+
+      - name: Run Lime Setup
+        run: |
+          haxelib run lime setup
+
+      # =========================================
+      # BUILD HTML5
+      # =========================================
+
+      - name: Build HTML5
+        run: |
+          haxelib run lime build html5
+
+      # =========================================
+      # UPLOAD HTML5 BUILD
+      # =========================================
+
+      - name: Upload HTML5 Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: HaxePainter-HTML5
+          path: export/release/html5/bin/
+          if-no-files-found: error
+          retention-days: 7
