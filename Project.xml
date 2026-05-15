@@ -19,5 +19,5 @@
 
     <haxelib name="flixel"/>
     <haxelib name="openfl"/>
-    <haxelib name="lime"/>
+    <haxelib name="flixel-ui"/>
 </project>
