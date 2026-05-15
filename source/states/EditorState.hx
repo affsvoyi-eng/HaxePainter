@@ -9,9 +9,16 @@ import flixel.util.FlxColor;
 
 import openfl.display.BitmapData;
 import openfl.display.Shape;
-import openfl.geom.Rectangle;
-import openfl.net.FileReference;
 import openfl.display.PNGEncoderOptions;
+
+import openfl.geom.Rectangle;
+
+import openfl.net.FileReference;
+
+import openfl.utils.ByteArray;
+
+import openfl.events.Event;
+import openfl.events.IOErrorEvent;
 
 class EditorState extends FlxState
 {
@@ -27,6 +34,8 @@ class EditorState extends FlxState
 
     var infoText:FlxText;
 
+    var file:FileReference;
+
     // =====================================
     // CREATE
     // =====================================
@@ -40,9 +49,11 @@ class EditorState extends FlxState
         // =====================================
 
         var bg = new FlxSprite();
+
         bg.loadGraphic("assets/images/bg.png");
 
         bg.setGraphicSize(1280, 720);
+
         bg.updateHitbox();
 
         add(bg);
@@ -52,7 +63,12 @@ class EditorState extends FlxState
         // =====================================
 
         var overlay = new FlxSprite();
-        overlay.makeGraphic(1280, 720, 0x33000000);
+
+        overlay.makeGraphic(
+            1280,
+            720,
+            0x33000000
+        );
 
         add(overlay);
 
@@ -60,8 +76,16 @@ class EditorState extends FlxState
         // CANVAS BORDER
         // =====================================
 
-        var border = new FlxSprite(245, 95);
-        border.makeGraphic(910, 510, FlxColor.BLACK);
+        var border = new FlxSprite(
+            245,
+            95
+        );
+
+        border.makeGraphic(
+            910,
+            510,
+            FlxColor.BLACK
+        );
 
         add(border);
 
@@ -69,10 +93,13 @@ class EditorState extends FlxState
         // CREATE CANVAS
         // =====================================
 
-        createCanvas(900, 500);
+        createCanvas(
+            900,
+            500
+        );
 
         // =====================================
-        // CREATE PALETTE
+        // COLOR PALETTE
         // =====================================
 
         createPalette();
@@ -114,6 +141,7 @@ class EditorState extends FlxState
             function()
             {
                 brushSize += 2;
+
                 updateInfo();
             }
         );
@@ -130,7 +158,13 @@ class EditorState extends FlxState
             "Brush -",
             function()
             {
-                brushSize = Std.int(Math.max(2, brushSize - 2));
+                brushSize = Std.int(
+                    Math.max(
+                        2,
+                        brushSize - 2
+                    )
+                );
+
                 updateInfo();
             }
         );
@@ -149,6 +183,7 @@ class EditorState extends FlxState
         );
 
         infoText.size = 16;
+
         infoText.color = FlxColor.WHITE;
 
         add(infoText);
@@ -160,7 +195,10 @@ class EditorState extends FlxState
     // CREATE CANVAS
     // =====================================
 
-    function createCanvas(w:Int, h:Int):Void
+    function createCanvas(
+        w:Int,
+        h:Int
+    ):Void
     {
         canvasData = new BitmapData(
             w,
@@ -169,7 +207,10 @@ class EditorState extends FlxState
             FlxColor.WHITE
         );
 
-        canvas = new FlxSprite(250, 100);
+        canvas = new FlxSprite(
+            250,
+            100
+        );
 
         canvas.makeGraphic(
             w,
@@ -183,7 +224,7 @@ class EditorState extends FlxState
     }
 
     // =====================================
-    // CREATE COLOR PALETTE
+    // CREATE PALETTE
     // =====================================
 
     function createPalette():Void
@@ -214,6 +255,7 @@ class EditorState extends FlxState
                 function()
                 {
                     currentColor = selectedColor;
+
                     updateInfo();
                 }
             );
@@ -232,14 +274,19 @@ class EditorState extends FlxState
     // UPDATE
     // =====================================
 
-    override public function update(elapsed:Float):Void
+    override public function update(
+        elapsed:Float
+    ):Void
     {
         super.update(elapsed);
 
         if (FlxG.mouse.pressed)
         {
-            var mx:Float = FlxG.mouse.x - canvas.x;
-            var my:Float = FlxG.mouse.y - canvas.y;
+            var mx:Float =
+                FlxG.mouse.x - canvas.x;
+
+            var my:Float =
+                FlxG.mouse.y - canvas.y;
 
             if (
                 mx >= 0 &&
@@ -248,7 +295,10 @@ class EditorState extends FlxState
                 my < canvasData.height
             )
             {
-                drawPixel(mx, my);
+                drawPixel(
+                    mx,
+                    my
+                );
             }
         }
     }
@@ -257,11 +307,16 @@ class EditorState extends FlxState
     // DRAW PIXEL
     // =====================================
 
-    function drawPixel(x:Float, y:Float):Void
+    function drawPixel(
+        x:Float,
+        y:Float
+    ):Void
     {
         var shape = new Shape();
 
-        shape.graphics.beginFill(currentColor);
+        shape.graphics.beginFill(
+            currentColor
+        );
 
         shape.graphics.drawCircle(
             x,
@@ -274,11 +329,12 @@ class EditorState extends FlxState
         canvasData.draw(shape);
 
         canvas.pixels = canvasData;
+
         canvas.dirty = true;
     }
 
     // =====================================
-    // ADD TEXT
+    // ADD SAMPLE TEXT
     // =====================================
 
     function addSampleText():Void
@@ -291,6 +347,7 @@ class EditorState extends FlxState
         );
 
         txt.size = 32;
+
         txt.color = currentColor;
 
         add(txt);
@@ -302,21 +359,76 @@ class EditorState extends FlxState
 
     function saveImage():Void
     {
-        var bytes = canvasData.encode(
-            new Rectangle(
-                0,
-                0,
-                canvasData.width,
-                canvasData.height
-            ),
-            new PNGEncoderOptions()
+        var bytes:ByteArray =
+            canvasData.encode(
+                new Rectangle(
+                    0,
+                    0,
+                    canvasData.width,
+                    canvasData.height
+                ),
+                new PNGEncoderOptions()
+            );
+
+        file = new FileReference();
+
+        file.addEventListener(
+            Event.COMPLETE,
+            onSaveComplete
         );
 
-        var file = new FileReference();
+        file.addEventListener(
+            Event.CANCEL,
+            onSaveCancel
+        );
+
+        file.addEventListener(
+            IOErrorEvent.IO_ERROR,
+            onSaveError
+        );
 
         file.save(
             bytes,
             "drawing.png"
+        );
+    }
+
+    // =====================================
+    // SAVE COMPLETE
+    // =====================================
+
+    function onSaveComplete(
+        e:Event
+    ):Void
+    {
+        trace(
+            "Image saved successfully!"
+        );
+    }
+
+    // =====================================
+    // SAVE CANCEL
+    // =====================================
+
+    function onSaveCancel(
+        e:Event
+    ):Void
+    {
+        trace(
+            "Save canceled."
+        );
+    }
+
+    // =====================================
+    // SAVE ERROR
+    // =====================================
+
+    function onSaveError(
+        e:IOErrorEvent
+    ):Void
+    {
+        trace(
+            "Error while saving image."
         );
     }
 
@@ -327,7 +439,12 @@ class EditorState extends FlxState
     function updateInfo():Void
     {
         infoText.text =
-            "Brush Size: " + brushSize +
-            "\nCurrent Color: #" + StringTools.hex(currentColor, 6);
+            "Brush Size: " +
+            brushSize +
+            "\nCurrent Color: #" +
+            StringTools.hex(
+                currentColor,
+                6
+            );
     }
 }
