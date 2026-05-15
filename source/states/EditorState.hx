@@ -79,18 +79,17 @@ class EditorState extends FlxState
 
         for (i in 0...colors.length)
         {
-            var box = new FlxButton(
-                20,
-                220 + (i * 40),
-                "",
-                function(c:Int)
-                {
-                    return function()
-                    {
-                        currentColor = c;
-                    };
-                }(colors[i])
-            );
+         var selectedColor:Int = color;
+
+ var box = new FlxButton(
+    20,
+    220 + (i * 40),
+    "",
+    function()
+    {
+        currentColor = selectedColor;
+    }
+);
 
             box.makeGraphic(30, 30, colors[i]);
 
